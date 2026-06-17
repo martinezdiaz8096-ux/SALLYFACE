@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oráculo de Nockfell - Sally Face Chatbot</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Courier Prime', monospace;
+            background-color: #0d0f12;
+            color: #d1d5db;
+        }
+        .tech-font {
+            font-family: 'Share Tech Mono', monospace;
+        }
+        /* Estilo Metálico y Grunge */
+        .metallic-panel {
+            background: linear-gradient(145deg, #181d24, #0f1216);
+            border: 2px solid #2d3846;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 10px 25px rgba(0,0,0,0.7);
+            position: relative;
+        }
+        .metallic-border {
+            border-image: linear-gradient(to bottom right, #4f5b66, #111418, #8b9bb4) 1;
+        }
+        .neon-glow-cyan {
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+            border-color: #06b6d4;
+        }
+        .neon-text-cyan {
+            color: #06b6d4;
+            text-shadow: 0 0 8px rgba(6, 182, 212, 0.6);
+        }
+        .neon-text-red {
+            color: #ef4444;
+            text-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+        }
+        /* Efecto de interferencia CRT */
+        .crt-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 6px 100%;
+            z-index: 999;
+            pointer-events: none;
+            opacity: 0.45;
+        }
+        /* Scrollbar Personalizado */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f1216;
+            border-left: 1px solid #2d3846;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2d3846;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #06b6d4;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between overflow-hidden relative selection:bg-cyan-950 selection:text-cyan-400">
+    <div class="crt-overlay"></div>
+
+    <!-- HEADER / BARRA DE ESTADO METÁLICA -->
+    <header class="metallic-panel border-b-4 border-cyan-500/50 p-4 flex items-center justify-between z-10">
+        <div class="flex items-center space-x-4">
+            <!-- Icono Máscara de Sal Fisher en SVG -->
+            <div class="w-14 h-14 bg-neutral-900 border-2 border-cyan-500 rounded-full flex items-center justify-center p-1 shadow-lg shadow-cyan-500/20">
+                <svg viewBox="0 0 100 100" class="w-full h-full">
+                    <!-- Base de la Prótesis (Blanca) -->
+                    <path d="M 20,45 C 20,20 80,20 80,45 C 80,75 70,90 50,90 C 30,90 20,75 20,45 Z" fill="#e5e7eb" stroke="#1f2937" stroke-width="3" />
+                    <!-- Parche Rosa (Ojo Derecho) -->
+                    <path d="M 20,45 C 20,28 48,28 48,45 C 48,65 24,65 20,45 Z" fill="#fbcfe8" stroke="#f472b6" stroke-width="2" />
+                    <!-- Agujero Ojo Derecho (Vacío / Negro) -->
+                    <ellipse cx="32" cy="45" rx="5" ry="7" fill="#111827" />
+                    <!-- Ojo Izquierdo Real (Azul) -->
+                    <ellipse cx="65" cy="45" rx="6" ry="8" fill="#1e1b4b" stroke="#312e81" stroke-width="1" />
+                    <circle cx="65" cy="45" r="3" fill="#06b6d4" />
+                    <circle cx="63" cy="43" r="1" fill="#ffffff" />
+                    <!-- Cicatrices y Costuras -->
+                    <path d="M 22,60 L 32,65 M 24,68 L 34,70 M 27,76 L 37,74" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" />
+                    <path d="M 48,45 L 48,90" stroke="#9ca3af" stroke-width="2" stroke-dasharray="3,3" />
+                    <!-- Correas de la máscara -->
+                    <path d="M 20,35 L 5,32 M 20,55 L 5,58 M 80,35 L 95,32 M 80,55 L 95,58" stroke="#111827" stroke-width="4" />
+                </svg>
+            </div>
+            <div>
+                <h1 class="tech-font text-2xl font-bold tracking-widest neon-text-cyan flex items-center gap-2">
+                    SALLY FACE <span class="text-xs bg-cyan-950 text-cyan-400 px-2 py-0.5 rounded border border-cyan-700/50">V1.5_NOCKFELL</span>
+                </h1>
+                <p class="text-xs text-slate-400 tracking-wider">Investigación de Anomalías y Análisis Psicopatológico</p>
+            </div>
+        </div>
+
+        <!-- CONTROLES DE AUDIO PROCEDURAL / CONFIGURACIÓN -->
+        <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-2 bg-slate-900/80 px-3 py-1.5 rounded-md border border-slate-700/50">
+                <button id="btn-audio" onclick="toggleAtmosphericMusic()" class="text-slate-400 hover:text-cyan-400 transition" title="Música de Ambiente (Sanity's Fall Synth)">
+                    <i class="fa-solid fa-volume-xmark text-lg" id="audio-icon"></i>
+                </button>
+                <span class="text-[10px] tech-font text-slate-500 uppercase tracking-widest hidden md:inline">SNTY_FALL_AMBIENT</span>
+            </div>
+            <div class="text-xs text-right hidden sm:block">
+                <div class="text-rose-500 font-bold tracking-widest tech-font flex items-center gap-1">
+                    <span class="inline-block w-2 h-2 rounded-full bg-rose-600 animate-pulse"></span> CONEXIÓN OSCURA
+                </div>
+                <div class="text-slate-500 text-[10px]">PISO 4 - ADDISON APTS</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- CUERPO PRINCIPAL DEL SISTEMA (SIDEBAR + CHAT) -->
+    <main class="flex-1 flex overflow-hidden relative">
+        <!-- BARRA LATERAL (HISTORIAL DE EXPEDIENTES / SELECCIÓN DE PERSONAJES) -->
+        <aside class="w-80 bg-[#0a0c0f] border-r-2 border-slate-800 flex flex-col justify-between hidden md:flex z-10">
+            <div class="p-4 space-y-4 overflow-y-auto flex-1">
+                <div class="border-b border-slate-800 pb-2">
+                    <h2 class="tech-font text-sm font-semibold tracking-wider text-slate-400 uppercase flex items-center gap-2">
+                        <i class="fa-solid fa-folder-open text-cyan-500"></i> Expedientes Guardados
+                    </h2>
+                </div>
+                <!-- Historial Dinámico -->
+                <div id="history-container" class="space-y-2 max-h-[250px] overflow-y-auto pr-1">
+                    <!-- Se llena con JS -->
+                    <div class="text-xs text-slate-500 italic p-2 text-center border border-dashed border-slate-800 rounded">
+                        Ninguna sesión guardada aún.
+                    </div>
+                </div>
+
+                <div class="border-b border-slate-800 pb-2 pt-2">
+                    <h2 class="tech-font text-sm font-semibold tracking-wider text-slate-400 uppercase flex items-center gap-2">
+                        <i class="fa-solid fa-skull-crossbones text-rose-500"></i> Sujetos de Interés
+                    </h2>
+                </div>
+                <!-- Lista de Accesos Rápidos de Personajes -->
+                <div class="space-y-1 text-xs">
+                    <button onclick="askQuickPrompt('Háblame detalladamente de Sal Fisher. Cuéntame su infancia, traumas y su máscara')" class="w-full text-left bg-slate-900/60 hover:bg-cyan-950/40 p-2 rounded border border-slate-800 hover:border-cyan-500/50 transition flex items-center space-x-2 text-slate-300">
+                        <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+                        <span>Sal Fisher (Sally Face)</span>
+                    </button>
+                    <button onclick="askQuickPrompt('Describe la historia completa de Larry Johnson, su relación con su padre y su trágico destino')" class="w-full text-left bg-slate-900/60 hover:bg-cyan-950/40 p-2 rounded border border-slate-800 hover:border-cyan-500/50 transition flex items-center space-x-2 text-slate-300">
+                        <span class="w-2 h-2 rounded-full bg-amber-600"></span>
+                        <span>Larry Johnson (Hermano)</span>
+                    </button>
+                    <button onclick="askQuickPrompt('¿Quién es Ashley Campbell? Cuéntame sobre su lealtad, arte y su rol al final del juego')" class="w-full text-left bg-slate-900/60 hover:bg-cyan-950/40 p-2 rounded border border-slate-800 hover:border-cyan-500/50 transition flex items-center space-x-2 text-slate-300">
+                        <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+                        <span>Ash Campbell (Lealtad)</span>
+                    </button>
+                    <button onclick="askQuickPrompt('Explica el arco de Todd Morrison, sus inventos y cómo fue corrompido por el demonio de ojos rojos')" class="w-full text-left bg-slate-900/60 hover:bg-cyan-950/40 p-2 rounded border border-slate-800 hover:border-cyan-500/50 transition flex items-center space-x-2 text-slate-300">
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                        <span>Todd Morrison (Tecnología)</span>
+                    </button>
+                    <button onclick="askQuickPrompt('Háblame del tormento de Travis Phelps, su nota en el baño, su homosexualidad reprimida y su redención final')" class="w-full text-left bg-slate-900/60 hover:bg-cyan-950/40 p-2 rounded border border-slate-800 hover:border-cyan-500/50 transition flex items-center space-x-2 text-slate-300">
+                        <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                        <span>Travis Phelps (Redención)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Panel de Control Inferior de la Barra Lateral -->
+            <div class="p-4 bg-slate-950/80 border-t border-slate-800">
+                <div class="text-[10px] tech-font text-slate-500 space-y-1">
+                    <div>SISTEMA: OFFLINE_DEC_99</div>
+                    <div>SEÑAL DEL VACÍO: 87.2%</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- PANTALLA CENTRAL DE CHAT -->
+        <section class="flex-1 flex flex-col justify-between bg-[#11141a] relative">
+            <!-- Capa metálica de fondo sutil -->
+            <div class="absolute inset-0 bg-radial-gradient(at top, #1c222b, #0d0f12) opacity-60 pointer-events-none"></div>
+
+            <!-- Mensajes de Chat -->
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 z-10">
+                <!-- Mensaje de Bienvenida del Oráculo -->
+                <div class="flex items-start space-x-4 max-w-3xl">
+                    <div class="w-10 h-10 bg-slate-950 border border-cyan-500/50 rounded flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-ghost text-cyan-400"></i>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="text-xs font-bold text-cyan-400 tech-font">ORÁCULO DE NOCKFELL</div>
+                        <div class="bg-slate-900/95 border border-slate-800 p-4 rounded text-sm text-slate-300 leading-relaxed shadow-lg">
+                            <p class="mb-3">Bienvenido a la terminal de registro de anomalías de los Apartamentos Addison. He sido configurado para compilar y revelar con precisión matemática y profundidad absoluta los perturbadores misterios que envuelven a <strong class="text-cyan-400">Sal Fisher</strong>, su círculo íntimo y los Devoradores de Dios.</p>
+                            <p class="mb-3">Conozco cada trauma, apariencia, gusto y destino de los involucrados en esta tragedia. No intentes desviar mi atención hacia asuntos mundanos ajenos a Nockfell; mi radar solo opera bajo la frecuencia de la verdad de Sally Face.</p>
+                            <p class="text-xs text-cyan-500 font-bold italic">¿Qué expediente deseas desenterrar el día de hoy?</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ADJUNTAR EVIDENCIAS (BARRA RÁPIDA DE OBJETOS CLAVE) -->
+            <div id="evidence-drawer" class="px-4 py-2 bg-slate-950/90 border-t border-slate-800/80 flex items-center space-x-3 overflow-x-auto z-10">
+                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest whitespace-nowrap flex items-center gap-1">
+                    <i class="fa-solid fa-circle-nodes text-cyan-500"></i> Evidencias de Nockfell:
+                </span>
+                <button onclick="attachEvidence('Super Gear Boy', 'Dispositivo tecnológico de Todd modificado para invocar y canalizar licores y fantasmas.')" class="bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs px-2 py-1 rounded border border-slate-700 hover:border-cyan-500 transition flex items-center space-x-1 whitespace-nowrap">
+                    <i class="fa-solid fa-gamepad text-cyan-400"></i> <span>Super Gear Boy</span>
+                </button>
+                <button onclick="attachEvidence('Nota del Baño de Travis', 'La conmovedora nota de Travis confesando sus profundos y vergonzosos sentimientos de atracción por otro chico.')" class="bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs px-2 py-1 rounded border border-slate-700 hover:border-rose-500 transition flex items-center space-x-1 whitespace-nowrap">
+                    <i class="fa-solid fa-file-invoice text-rose-400"></i> <span>Nota de Travis</span>
+                </button>
+                <button onclick="attachEvidence('Amuleto de Ash', 'Colgante de plata imbuido con energía del alma de Sal Fisher que brilla en un azul de otro mundo.')" class="bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs px-2 py-1 rounded border border-slate-700 hover:border-purple-500 transition flex items-center space-x-1 whitespace-nowrap">
+                    <i class="fa-solid fa-gem text-purple-400"></i> <span>Amuleto de Ash</span>
+                </button>
+                <button onclick="attachEvidence('Mortadela de la Cafetería', 'La desagradable mortadela de la secundaria Nockfell cuyo origen es de lo más siniestro (carne de cabra/estudiantes desaparecidos).')" class="bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs px-2 py-1 rounded border border-slate-700 hover:border-red-500 transition flex items-center space-x-1 whitespace-nowrap">
+                    <i class="fa-solid fa-drumstick-bite text-red-400"></i> <span>Mortadela</span>
+                </button>
+            </div>
+
+            <!-- ENTRADA DE TEXTO Y ACCIONES -->
+            <div class="p-4 bg-[#0d0f13] border-t-2 border-slate-800 z-10">
+                <!-- Evidencia seleccionada actual -->
+                <div id="attached-preview" class="hidden mb-2 bg-cyan-950/30 border border-cyan-800/80 rounded p-2 text-xs flex items-center justify-between">
+                    <span class="text-cyan-400 flex items-center gap-1" id="attached-text">
+                        <i class="fa-solid fa-paperclip"></i> Evidencia adjunta: Ninguna
+                    </span>
+                    <button onclick="clearAttached()" class="text-rose-400 hover:text-rose-300">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="flex items-center space-x-3">
+                    <!-- Botón para subir imágenes reales -->
+                    <label class="cursor-pointer bg-slate-900 hover:bg-slate-800 text-slate-300 px-3 py-3 rounded border border-slate-700 hover:border-cyan-500 transition flex items-center justify-center" title="Adjuntar captura de pantalla del juego (PNG/JPG)">
+                        <i class="fa-solid fa-camera text-lg"></i>
+                        <input type="file" id="image-upload" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+                    </label>
+
+                    <!-- Input de consulta principal -->
+                    <input type="text" id="user-input" onkeydown="handleKeyDown(event)" placeholder="Interroga al Oráculo de Nockfell sobre Sally Face..." class="flex-1 bg-slate-950 text-slate-200 border-2 border-slate-800 focus:border-cyan-500 rounded px-4 py-3 outline-none text-sm transition tracking-wide placeholder-slate-600">
+                    
+                    <!-- Botón Enviar -->
+                    <button onclick="sendMessage()" class="bg-cyan-950 hover:bg-cyan-900 text-cyan-400 border border-cyan-700/80 hover:border-cyan-400 px-5 py-3 rounded flex items-center justify-center transition shadow-lg shadow-cyan-950/30">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div class="text-[10px] text-slate-500 mt-2 flex justify-between items-center px-1">
+                    <span>* Mensajes ilimitados *</span>
+                    <span class="uppercase">Frecuencia estable: 432Hz</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- SISTEMA DE LORE Y RESPUESTAS (BASE DE CONOCIMIENTOS DE RESPALDO) -->
+    <script>
+        const API_KEY = ""; // Entorno dinámico provisto por Canvas
+        const app_id = typeof __app_id !== 'undefined' ? __app_id : 'sally-face-oracle';
+
+        let chatHistory = [];
+        let currentAttachedEvidence = null;
+        let base64ImageString = null;
+        let isAudioPlaying = false;
+        let audioCtx = null;
+        let ambientOscillators = [];
+        let savedSessions = JSON.parse(localStorage.getItem('sf_oracle_sessions') || '[]');
+
+        // Inicializar sesiones de historial al cargar
+        window.onload = function() {
+            renderHistory();
+        }
+
+        // --- SISTEMA DE SINTETIZADOR DE AUDIO PROCEDURAL (MÚSICA OSCURA DE AMBIENTE) ---
+        function toggleAtmosphericMusic() {
+            if (isAudioPlaying) {
+                // Detener audio
+                ambientOscillators.forEach(osc => { try { osc.stop(); } catch(e) {} });
+                ambientOscillators = [];
+                isAudioPlaying = false;
+                document.getElementById('audio-icon').className = "fa-solid fa-volume-xmark text-lg";
+                document.getElementById('audio-icon').classList.remove('neon-text-cyan');
+            } else {
+                // Iniciar Audio Context
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                audioCtx.resume();
+
+                // Crear oscilador de Drone grave (misterioso/metálico)
+                const osc1 = audioCtx.createOscillator();
+                const osc2 = audioCtx.createOscillator();
+                const filter = audioCtx.createBiquadFilter();
+                const gainNode = audioCtx.createGain();
+
+                osc1.type = 'sawtooth';
+                osc1.frequency.setValueAtTime(55, audioCtx.currentTime); // Nota La baja
+
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(110, audioCtx.currentTime); // Armónico
+
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(250, audioCtx.currentTime);
+                filter.Q.setValueAtTime(4, audioCtx.currentTime);
+
+                // Modulador LFO para crear vibración lenta
+                const lfo = audioCtx.createOscillator();
+                const lfoGain = audioCtx.createGain();
+                lfo.frequency.setValueAtTime(0.15, audioCtx.currentTime); // Muy lento
+                lfoGain.gain.setValueAtTime(100, audioCtx.currentTime);
+
+                lfo.connect(lfoGain);
+                lfoGain.connect(filter.frequency);
+
+                gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime); // Volumen sutil de fondo
+
+                osc1.connect(filter);
+                osc2.connect(filter);
+                filter.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                osc1.start();
+                osc2.start();
+                lfo.start();
+
+                ambientOscillators.push(osc1, osc2, lfo);
+                isAudioPlaying = true;
+                document.getElementById('audio-icon').className = "fa-solid fa-volume-high text-lg neon-text-cyan animate-pulse";
+            }
+        }
+
+        // --- MANEJO DE HISTORIAL Y SESIONES ---
+        function saveSessionToHistory() {
+            if (chatHistory.length === 0) return;
+            const previewText = chatHistory[0].text.substring(0, 35) + "...";
+            const session = {
+                id: Date.now(),
+                title: `Investigación ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`,
+                preview: previewText,
+                messages: [...chatHistory]
+            };
+            savedSessions.unshift(session);
+            // Mantener solo las últimas 15 sesiones
+            if (savedSessions.length > 15) savedSessions.pop();
+            localStorage.setItem('sf_oracle_sessions', JSON.stringify(savedSessions));
+            renderHistory();
+        }
+
+        function loadSession(id) {
+            const found = savedSessions.find(s => s.id === id);
+            if (found) {
+                chatHistory = [...found.messages];
+                rebuildChatUI();
+            }
+        }
+
+        function deleteSession(id, e) {
+            e.stopPropagation();
+            savedSessions = savedSessions.filter(s => s.id !== id);
+            localStorage.setItem('sf_oracle_sessions', JSON.stringify(savedSessions));
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('history-container');
+            if (savedSessions.length === 0) {
+                container.innerHTML = `
+                    <div class="text-xs text-slate-500 italic p-2 text-center border border-dashed border-slate-800 rounded">
+                        Ninguna sesión guardada aún.
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = savedSessions.map(session => `
+                <div onclick="loadSession(${session.id})" class="group w-full text-left bg-slate-900/40 hover:bg-slate-800/60 p-2.5 rounded border border-slate-800 hover:border-slate-700 transition cursor-pointer relative flex justify-between items-center">
+                    <div class="flex-1 min-w-0 pr-4">
+                        <div class="text-xs font-bold text-cyan-500 truncate">${session.title}</div>
+                        <div class="text-[10px] text-slate-400 truncate mt-0.5">${session.preview}</div>
+                    </div>
+                    <button onclick="deleteSession(${session.id}, event)" class="text-slate-600 hover:text-rose-500 p-1 rounded transition opacity-0 group-hover:opacity-100">
+                        <i class="fa-solid fa-trash-can text-[10px]"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // --- ENVIAR CONSULTAS EVIDENCIALES ---
+        function attachEvidence(name, description) {
+            currentAttachedEvidence = { name, description };
+            const preview = document.getElementById('attached-preview');
+            const previewText = document.getElementById('attached-text');
+            previewText.innerHTML = `<i class="fa-solid fa-paperclip"></i> Evidencia: <strong>${name}</strong> - <span class="italic text-slate-400 text-[10px]">${description.substring(0, 45)}...</span>`;
+            preview.classList.remove('hidden');
+        }
+
+        function clearAttached() {
+            currentAttachedEvidence = null;
+            base64ImageString = null;
+            document.getElementById('attached-preview').classList.add('hidden');
+            document.getElementById('image-upload').value = '';
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                base64ImageString = e.target.result.split(',')[1];
+                attachEvidence("Foto externa: Nockfell", "Análisis fotográfico de evidencias físicas subidas por el usuario.");
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleKeyDown(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function askQuickPrompt(text) {
+            document.getElementById('user-input').value = text;
+            sendMessage();
+        }
+
+        // Reconstrucción del Chat en la UI
+        function rebuildChatUI() {
+            const chatContainer = document.getElementById('chat-messages');
+            chatContainer.innerHTML = '';
+            chatHistory.forEach(msg => {
+                appendMessageUI(msg.role === 'user' ? 'user' : 'model', msg.text, msg.evidence, msg.isImage);
+            });
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Insertar burbujas de UI
+        function appendMessageUI(sender, text, evidence = null, isImage = false) {
+            const container = document.getElementById('chat-messages');
+            const wrapper = document.createElement('div');
+            wrapper.className = `flex items-start space-x-4 max-w-4xl ${sender === 'user' ? 'justify-end self-end ml-auto' : ''}`;
+
+            const iconBg = sender === 'user' ? 'bg-slate-800 border-slate-700' : 'bg-slate-950 border-cyan-500/50';
+            const iconHTML = sender === 'user' 
+                ? '<i class="fa-solid fa-user text-slate-300"></i>' 
+                : '<i class="fa-solid fa-ghost text-cyan-400"></i>';
+            const senderName = sender === 'user' ? 'INVESTIGADOR' : 'ORÁCULO DE NOCKFELL';
+            const senderColor = sender === 'user' ? 'text-slate-400' : 'text-cyan-400';
+            const bubbleBg = sender === 'user' ? 'bg-[#181d24] border-slate-800' : 'bg-[#0a0c0f]/95 border-slate-800';
+
+            let evidenceBox = '';
+            if (evidence) {
+                evidenceBox = `
+                <div class="mb-2.5 bg-slate-950/80 p-2 rounded border border-cyan-900/60 text-xs flex items-center space-x-2">
+                    <i class="fa-solid fa-magnifying-glass-location text-cyan-400"></i>
+                    <div>
+                        <span class="text-cyan-400 font-bold">${evidence.name}:</span>
+                        <span class="text-slate-400 italic">${evidence.description}</span>
+                    </div>
+                </div>`;
+            }
+
+            // Convertir saltos de línea para que se vean bien formateados
+            const formattedText = text.replace(/\n/g, '<br>');
+
+            wrapper.innerHTML = `
+                ${sender !== 'user' ? `<div class="w-10 h-10 ${iconBg} border rounded flex items-center justify-center flex-shrink-0">${iconHTML}</div>` : ''}
+                <div class="space-y-1">
+                    <div class="text-[10px] font-bold ${senderColor} tech-font ${sender === 'user' ? 'text-right' : ''}">${senderName}</div>
+                    <div class="${bubbleBg} border p-4 rounded text-sm text-slate-300 leading-relaxed shadow-lg">
+                        ${evidenceBox}
+                        <p>${formattedText}</p>
+                    </div>
+                </div>
+                ${sender === 'user' ? `<div class="w-10 h-10 ${iconBg} border rounded flex items-center justify-center flex-shrink-0">${iconHTML}</div>` : ''}
+            `;
+
+            container.appendChild(wrapper);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // --- PROMPT DE SISTEMA ESTRICTO PARA EL GEMINI API ---
+        const systemPrompt = `
+Eres el Oráculo de Nockfell, un chatbot especializado única y exclusivamente en el videojuego indie "Sally Face".
+Tus respuestas deben cumplir con las siguientes reglas sagradas:
+1. Respuestas de alta precisión, serias, tétricas y sumamente detalladas (mínimo 3-4 párrafos explicativos por cada consulta). No uses respuestas cortas. Debes profundizar en la psicología del personaje, sus traumas, apariencia física detallada y su destino final.
+2. NUNCA respondas sobre temas ajenos a "Sally Face". Si el usuario te pregunta por cualquier otra cosa (matemáticas, otros videojuegos, programación, recetas, etc.), debes negarte rotundamente de manera misteriosa y tétrica, diciendo por ejemplo: "La oscuridad y la Plaga de las Sombras nublan esta terminal de Nockfell. No poseo registros ajenos al misterio de los Apartamentos Addison..." e incita al usuario a regresar al tema.
+3. Utiliza toda la información provista en la base de datos de los personajes para sustentar tu nivel de detalle:
+- Sal Fisher (Sally Face): Su cara desfigurada, el terrible accidente donde murió su madre Diane Fisher y el asesino con máscara de perro (Kenneth Phelps), su prótesis, su Super Gear Boy, el asesinato masivo para detener a los Devoradores de Dios, y su posterior ejecución en la silla eléctrica.
+- Larry Johnson: Su madre Lisa, su desaparecido padre Jim (aliens/viajes espaciales), la maldición del demonio de ojos rojos, su suicidio trágico, su forma fantasmal atrapada en el vacío.
+- Ashley Campbell: Su lealtad infinita, su motocicleta, cómo le enseñó arte Larry, cómo descubre el templo de los Devoradores de Dios al caer por la rampa de basura, su brazo azul brillante imbuido con el alma de Sal, y su ojo azul.
+- Todd Morrison: Su pragmatismo e increíble intelecto informático, sus modificaciones del Gear Boy, y su desgarrador descenso a la locura tras ser poseído por el Demonio de Ojos Rojos.
+- Travis Phelps: Su tormentoso trasfondo, hijo del reverendo sectario Kenneth Phelps, su sexualidad oculta (homosexual reprimido por la religión de su padre), la conmovedora nota del baño dedicada a Sal, y su épico sacrificio final apuñalando a su propio padre infectado.
+Adopta una voz seria, analítica y misteriosa. Haz que el usuario sienta la atmósfera gótica del juego.
+        `;
+
+        // --- ENVIAR MENSAJE LLAMANDO AL API ---
+        async function sendMessage() {
+            const inputElement = document.getElementById('user-input');
+            const query = inputElement.value.trim();
+            if (!query && !currentAttachedEvidence) return;
+
+            // Limpiar input de inmediato
+            inputElement.value = '';
+
+            // Guardar contexto local de evidencia
+            const attached = currentAttachedEvidence;
+            const isImg = !!base64ImageString;
+
+            // Guardar en historial de UI del usuario
+            appendMessageUI('user', query || "(Analizando evidencia adjunta)", attached, isImg);
+
+            // Agregar al historial de memoria del chat
+            let userContent = query;
+            if (attached) {
+                userContent += ` [EVIDENCIA ADJUNTA: ${attached.name} - Descripción: ${attached.description}]`;
+            }
+
+            chatHistory.push({ role: 'user', text: userContent, evidence: attached, isImage: isImg });
+
+            // Añadir burbuja de carga / "Procesando..."
+            const chatContainer = document.getElementById('chat-messages');
+            const loadingBubble = document.createElement('div');
+            loadingBubble.id = "loading-bubble";
+            loadingBubble.className = "flex items-start space-x-4 max-w-3xl";
+            loadingBubble.innerHTML = `
+                <div class="w-10 h-10 bg-slate-950 border border-cyan-500/30 rounded flex items-center justify-center flex-shrink-0 animate-pulse">
+                    <i class="fa-solid fa-circle-nodes text-cyan-400"></i>
+                </div>
+                <div class="space-y-1">
+                    <div class="text-[10px] font-bold text-cyan-500 tech-font animate-pulse">ORÁCULO_NOCKFELL_BUSCANDO...</div>
+                    <div class="bg-slate-900/40 border border-slate-800 p-4 rounded text-sm text-cyan-500/70 italic flex items-center gap-2">
+                        <i class="fa-solid fa-spinner animate-spin"></i> Canalizando vibraciones espirituales...
+                    </div>
+                </div>
+            `;
+            chatContainer.appendChild(loadingBubble);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            // Limpiar evidencia adjunta actual
+            clearAttached();
+
+            // Llamada con reintentos y exponencial backoff
+            try {
+                const responseText = await callGeminiAPIWithBackoff(userContent, isImg ? base64ImageString : null);
+                
+                // Remover burbuja de carga
+                document.getElementById('loading-bubble').remove();
+
+                // Añadir respuesta a la UI
+                appendMessageUI('model', responseText);
+
+                // Registrar en el historial de memoria
+                chatHistory.push({ role: 'model', text: responseText });
+
+                // Auto-salvado de la sesión en el historial lateral
+                saveSessionToHistory();
+
+            } catch (err) {
+                document.getElementById('loading-bubble').remove();
+                appendMessageUI('model', "Se ha detectado una anomalía estática en el plano terrenal. El receptor del templo de los Devoradores de Dios se encuentra bloqueado por la presencia de Ojos Rojos. Inténtalo de nuevo.");
+            }
+        }
+
+        // --- IMPLEMENTACIÓN EXPONENCIAL BACKOFF Y CONEXIÓN GEMINI ---
+        async function callGeminiAPIWithBackoff(userQuery, base64Img = null, retries = 5, delay = 1000) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`;
+            
+            // Construir el payload según las instrucciones
+            let partsArray = [{ text: userQuery }];
+            if (base64Img) {
+                partsArray.push({
+                    inlineData: {
+                        mimeType: "image/png",
+                        data: base64Img
+                    }
+                });
+            }
+
+            const payload = {
+                contents: [{
+                    role: "user",
+                    parts: partsArray
+                }],
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                }
+            };
+
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API respondió con estatus ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    const textResponse = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (textResponse) {
+                        return textResponse;
+                    } else {
+                        throw new Error("Respuesta vacía del servidor.");
+                    }
+                } catch (error) {
+                    if (i === retries - 1) throw error;
+                    // Retraso exponencial
+                    await new Promise(res => setTimeout(res, delay));
+                    delay *= 2;
+                }
+            }
+        }
+    </script>
+</body>
+</html>
